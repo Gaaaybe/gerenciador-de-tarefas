@@ -1,30 +1,39 @@
 
+import axios from "axios";
 import AddTask from "./components/AddTask";
 import Tasks from "./components/Tasks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function App() {
-  const [tasks, setTasks] = useState([{
-    id: 1,
-    title: "Task 1",
-    description: "This is the first task",
-    isCompleted: false,
-  },
-  {
-    id: 2,
-    title: "Task 2",
-    description: "This is the second task",
-    isCompleted: false,
-  },
-  {
-    id: 3,
-    title: "Task 3",
-    description: "This is the third task",
-    isCompleted: false,
-  }]);
+const [tasks, setTasks] = useState(JSON.parse(localStorage.getItem("tasks") || "[]"));
+
+
+useEffect(() => {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}, [tasks]);
+
+async function getTasks() {
+  try {
+    const response = await axios.get("https://jsonplaceholder.typicode.com/todos?_limit=10");
+    const tasksData = response.data.map((task: { id: string; title: string; completed: boolean; }) => ({
+      id: task.id,
+      title: task.title,
+      description: task.title,
+      isCompleted: task.completed,
+    }));
+    setTasks(tasksData);
+  } catch (error) {
+    console.error(error);
+    console.log("Error fetching tasks from API");
+  }
+}
+
+useEffect(() => {
+  getTasks();
+}, []);
 
   function onTaskClick(taskId: number) {
-    const newTasks = tasks.map((task)=>{
+    const newTasks = tasks.map((task: { id: number; isCompleted: any; })=>{
       if (task.id === taskId) {
         return {
           ...task,
@@ -37,7 +46,7 @@ function App() {
   }
 
   function onTaskDelete(taskId: number) {
-    const newTasks = tasks.filter((task) => task.id !== taskId);
+    const newTasks = tasks.filter((task: { id: number; }) => task.id !== taskId);
     setTasks(newTasks);
   }
 
